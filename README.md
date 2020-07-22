@@ -1,8 +1,6 @@
 <h1 align="center">POSIX-sh-memo</h1>
 <p align="center">Hui-Jun Chen's memo on POSIX-compliant shell</p>
 
-# Replace external program with built-in function
-
 ## Replace `head -n 1`
 
 ### Mission: define `var` based on the first line of `/proc/stat`.
@@ -19,7 +17,7 @@ You can:
 read -r var < /proc/stat
 ```
 
-Why: Efficiency
+Efficiency comparison:
 
 ```sh
 # Repeat both command 1000 times:
@@ -52,7 +50,7 @@ source="One
 Two
 Three"
 
-var2=$(printf '%s' "$source" | head -n 1)
+var=$(printf '%s' "$source" | head -n 1)
 ```
 
 You can:
@@ -69,14 +67,14 @@ nl='
 var=${source%%$nl*}
 ```
 
-Why: Efficiency
+Efficiency comparison:
 
 ```sh
 # Repeat both command 1000 times:
 
 time (
     for i in $(seq 1000); do
-        var2=$(printf '%s' "$source" | head -n 1)
+        var=$(printf '%s' "$source" | head -n 1)
     done
 )
 # Output:
@@ -84,16 +82,134 @@ time (
 
 
 time (
-    for i in $(seq 1000); do
-        nl='
-        '
-        var=${source%%$nl*}
-    done
+for i in $(seq 1000); do
+nl='
+'
+var=${source%%$nl*}
+done
 )
 
 # Output:
 # 0.01s user 0.00s system 95% cpu 0.012 total
 ```
 
+Caveat: the POSIX way to define a new-line variable `$nl` is to just type a space. Thus, if we have any indentation or space in the `$nl` variable, then this parameter expansion won't work.
+
+## Replace `tail -n 1`
+
+### Mission: define `var` based on the last line of `/proc/stat`
+
+Instead of:
+
+```sh
+var=$(tail -n 1 "/proc/stat")
+```
+
+You can:
+
+```sh
+nl='
+'
+
+source=$(</proc/stat)
+var=${source##*$nl}
+```
+
+Efficiency comparison:
+
+```sh
+time (
+    for i in $(seq 1000); do
+        var=$(tail -n 1 "/proc/stat")
+    done
+)
+
+# Output:
+# 0.69s user 0.30s system 102% cpu 0.964 total
+
+time (
+for i in $(seq 1000); do
+nl='
+'
+
+source=$(</proc/stat)
+var=${source##*$nl}
+done
+)
+
+# Output:
+# 0.06s user 0.03s system 99% cpu 0.092 total
+```
+Caveat: the POSIX way to define a new-line variable `$nl` is to just type a space. Thus, if we have any indentation or space in the `$nl` variable, then this parameter expansion won't work.
+
+### Mission: define `var` based on the last line of another multi-line variable
+
+Instead of:
+
+```sh
+source="One
+Two
+Three"
+
+var=$(printf '%s' "$source" | tail -n 1)
+```
+
+You can:
+
+```sh
+source="One
+Two
+Three"
+
+# Pre-define a newline character first
+nl='
+'
+var=${source##*$nl}
+```
+
+Efficiency comparison:
+
+```sh
+time (
+    for i in $(seq 1000); do
+        var=$(printf '%s' "$source" | tail -n 1)
+    done
+)
+
+# Output
+# 1.83s user 0.71s system 121% cpu 2.094 total
 
 
+time (
+for i in $(seq 1000); do
+nl='
+'
+
+var=${source##*$nl}
+done
+)
+# Output
+# 0.01s user 0.00s system 62% cpu 0.012 total
+```
+
+Caveat: the POSIX way to define a new-line variable `$nl` is to just type a space. Thus, if we have any indentation or space in the `$nl` variable, then this parameter expansion won't work.
+
+Caveat 2: Consider the following scenario:
+
+```sh
+source="One
+Two
+Three
+"
+
+var=$(printf '%s' "$source" | tail -n 1)
+# var=Three
+
+nl='
+'
+
+var2=${source##*$nl}
+# var2=
+```
+
+Need to check whether the multi-line variable ends with `\n` or not.
