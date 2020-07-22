@@ -1,6 +1,18 @@
 <h1 align="center">POSIX-sh-memo</h1>
 <p align="center">Hui-Jun Chen's memo on POSIX-compliant shell</p>
 
+
+<!-- vim-markdown-toc GFM -->
+
+* [Replace `head -n 1`](#replace-head--n-1)
+	* [Mission: define `var` based on the first line of `/proc/stat`.](#mission-define-var-based-on-the-first-line-of-procstat)
+	* [Mission: define `var` based on the first line of another multi-line variable](#mission-define-var-based-on-the-first-line-of-another-multi-line-variable)
+* [Replace `tail -n 1`](#replace-tail--n-1)
+	* [Mission: define `var` based on the last line of `/proc/stat`](#mission-define-var-based-on-the-last-line-of-procstat)
+	* [Mission: define `var` based on the last line of another multi-line variable](#mission-define-var-based-on-the-last-line-of-another-multi-line-variable)
+
+<!-- vim-markdown-toc -->
+
 ## Replace `head -n 1`
 
 ### Mission: define `var` based on the first line of `/proc/stat`.
